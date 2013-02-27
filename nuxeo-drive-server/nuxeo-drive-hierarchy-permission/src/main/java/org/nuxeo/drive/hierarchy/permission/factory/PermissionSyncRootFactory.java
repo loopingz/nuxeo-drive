@@ -118,10 +118,18 @@ public class PermissionSyncRootFactory extends
         Principal principal = doc.getCoreSession().getPrincipal();
         String docCreator = (String) doc.getPropertyValue("dc:creator");
         if (principal.getName().equals(docCreator)) {
-            return getFileSystemAdapterService().getVirtualFolderItemFactory(
+            FolderItem parent = getFileSystemAdapterService().getVirtualFolderItemFactory(
                     userSyncRootParentFactoryName).getVirtualFolderItem(
-                    principal).getId();
+                    principal);
+            if (parent != null) {
+                return parent.getId();
+            } else {
+                // TODO
+                return null;
+            }
+
         } else {
+            // TODO
             return getFileSystemAdapterService().getVirtualFolderItemFactory(
                     sharedSyncRootParentFactoryName).getVirtualFolderItem(
                     principal).getId();

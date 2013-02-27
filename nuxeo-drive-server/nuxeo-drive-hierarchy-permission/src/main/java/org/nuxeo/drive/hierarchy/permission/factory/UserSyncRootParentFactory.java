@@ -17,7 +17,9 @@
 package org.nuxeo.drive.hierarchy.permission.factory;
 
 import java.security.Principal;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -28,11 +30,15 @@ import org.nuxeo.drive.adapter.FolderItem;
 import org.nuxeo.drive.hierarchy.permission.adapter.UserSyncRootParentFolderItem;
 import org.nuxeo.drive.service.FileSystemItemFactory;
 import org.nuxeo.drive.service.FileSystemItemManager;
+import org.nuxeo.drive.service.NuxeoDriveManager;
+import org.nuxeo.drive.service.SynchronizationRoots;
 import org.nuxeo.drive.service.VirtualFolderItemFactory;
 import org.nuxeo.drive.service.impl.AbstractFileSystemItemFactory;
 import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.DocumentSecurityException;
+import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.LifeCycleConstants;
 import org.nuxeo.ecm.core.api.repository.RepositoryManager;
 import org.nuxeo.ecm.platform.userworkspace.api.UserWorkspaceService;
@@ -89,6 +95,16 @@ public class UserSyncRootParentFactory extends AbstractFileSystemItemFactory
                     doc.getId(), LifeCycleConstants.DELETED_STATE));
             return false;
         }
+        // Check if the user workspace is registered as a synchronization root
+        // OR if the user has at least one registered synchronization root
+        // he/she created
+        CoreSession session = doc.getCoreSession();
+        if (!(isSyncRoot(doc) || isAtLeastOneSyncRoot(session))) {
+            log.debug(String.format(
+                    "User workspace is not registered as a synchronization root and there are no other synchronization roots registered for user %s.",
+                    session.getPrincipal().getName()));
+            return false;
+        }
         return true;
     }
 
@@ -130,6 +146,44 @@ public class UserSyncRootParentFactory extends AbstractFileSystemItemFactory
     }
 
     /*------------------- Protected ------------------- */
+    protected boolean isSyncRoot(DocumentModel doc) throws ClientException {
+        NuxeoDriveManager nuxeoDriveManager = Framework.getLocalService(NuxeoDriveManager.class);
+        return nuxeoDriveManager.isSynchronizationRoot(
+                doc.getCoreSession().getPrincipal(), doc);
+    }
+
+    protected boolean isAtLeastOneSyncRoot(CoreSession session)
+            throws ClientException {
+        Principal principal = session.getPrincipal();
+        Map<String, SynchronizationRoots> syncRootsByRepo = Framework.getLocalService(
+                NuxeoDriveManager.class).getSynchronizationRoots(principal);
+        for (String repositoryName : syncRootsByRepo.keySet()) {
+            Set<IdRef> syncRootRefs = syncRootsByRepo.get(repositoryName).refs;
+            Iterator<IdRef> syncRootRefsIt = syncRootRefs.iterator();
+            while (syncRootRefsIt.hasNext()) {
+                IdRef idRef = syncRootRefsIt.next();
+                try {
+                    DocumentModel doc = session.getDocument(idRef);
+                    // Filter by creator
+                    // TODO: allow filtering by dc:creator in
+                    // NuxeoDriveManager#getSynchronizationRoots(Principal
+                    // principal)
+                    if (principal.getName().equals(
+                            doc.getPropertyValue("dc:creator"))) {
+                        // TODO: should adapt doc as a FileSystemItem to go
+                        // through all factory checks
+                        return true;
+                    }
+                } catch (DocumentSecurityException e) {
+                    log.debug(String.format(
+                            "User %s has no READ access on synchronization root %s.",
+                            principal.getName(), idRef));
+                }
+            }
+        }
+        return false;
+    }
+
     protected String getTopLevelFolderItemId(Principal principal)
             throws ClientException {
         FolderItem topLevelFolder = getFileSystemItemManager().getTopLevelFolder(
