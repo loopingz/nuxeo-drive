@@ -32,6 +32,8 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.api.DocumentSecurityException;
 import org.nuxeo.ecm.core.api.IdRef;
+import org.nuxeo.ecm.core.api.Lock;
+import org.nuxeo.ecm.core.api.NuxeoPrincipal;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.trash.TrashService;
 import org.nuxeo.runtime.api.Framework;
@@ -89,14 +91,19 @@ public abstract class AbstractDocumentBackedFileSystemItem extends
 
     protected AbstractDocumentBackedFileSystemItem(String factoryName,
             FolderItem parentItem, DocumentModel doc) throws ClientException {
-
         super(factoryName, doc.getCoreSession().getPrincipal());
 
         // Backing DocumentModel attributes
+        NuxeoPrincipal principal = (NuxeoPrincipal) doc.getCoreSession().getPrincipal();
         repositoryName = doc.getRepositoryName();
         docId = doc.getId();
         docPath = doc.getPathAsString();
         docTitle = doc.getTitle();
+        boolean unlockedOrCanUnlock = true;
+        Lock lockInfo = doc.getLockInfo();
+        if (lockInfo != null && !principal.isAdministrator()) {
+            unlockedOrCanUnlock = userName.equals(lockInfo.getOwner());
+        }
 
         // FileSystemItem attributes
         id = computeId(docId);
@@ -105,11 +112,14 @@ public abstract class AbstractDocumentBackedFileSystemItem extends
         lastModificationDate = (Calendar) doc.getPropertyValue("dc:modified");
         CoreSession docSession = doc.getCoreSession();
         canRename = docSession.hasPermission(doc.getRef(),
-                SecurityConstants.WRITE_PROPERTIES);
+                SecurityConstants.WRITE_PROPERTIES)
+                && unlockedOrCanUnlock;
+
         canDelete = docSession.hasPermission(doc.getRef(),
                 SecurityConstants.REMOVE)
                 && docSession.hasPermission(doc.getParentRef(),
-                        SecurityConstants.REMOVE_CHILDREN);
+                        SecurityConstants.REMOVE_CHILDREN)
+                        && unlockedOrCanUnlock;
 
         String parentPath;
         if (parentItem != null) {
