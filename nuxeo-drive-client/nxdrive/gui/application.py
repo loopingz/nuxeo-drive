@@ -102,9 +102,6 @@ class Application(QApplication):
         self._setup_systray()
         self.rebuild_menu()
 
-        # Start long running synchronization thread
-        self.start_synchronization_thread()
-
     def get_info(self, local_folder):
         info = self.binding_info.get(local_folder, None)
         if info is None:
@@ -349,3 +346,10 @@ class Application(QApplication):
             except:
                 log.error("Error handling URL event: %s", url, exc_info=True)
         return super(Application, self).event(event)
+
+    def internationalize(self):
+        """Setup internationalization for the Qt application"""
+        locale = QtCore.QLocale.system().name()
+        translator = QtCore.QTranslator()
+        if translator.load("nxdrive/gui/i18n/nuxeo_drive_" + locale):
+            self.installTranslator(translator)

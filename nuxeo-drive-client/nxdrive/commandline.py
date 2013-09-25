@@ -341,6 +341,9 @@ class CliHandler(object):
         # TODO: use the start method as default once implemented
         from nxdrive.gui.application import Application
         app = Application(self.controller, options)
+        app.internationalize()
+        # Start long running synchronization thread
+        app.start_synchronization_thread()
         app.exec_()
 
     def start(self, options=None):
