@@ -88,8 +88,8 @@ class Application(QApplication):
         # Put communication channel in place for intra and inter-thread
         # communication for UI change notifications
         self.communicator = Communicator()
-        self.communicator.icon.connect(self.set_icon_state)
-        self.communicator.menu.connect(self.rebuild_menu)
+#         self.communicator.icon.connect(self.set_icon_state)
+#         self.communicator.menu.connect(self.rebuild_menu)
         self.communicator.stop.connect(self.handle_stop)
         self.communicator.invalid_credentials.connect(
             self.handle_invalid_credentials)
@@ -99,8 +99,8 @@ class Application(QApplication):
         self.state = 'paused'
         self.quit_on_stop = False
         self.binding_info = {}
-        self._setup_systray()
-        self.rebuild_menu()
+#         self._setup_systray()
+#         self.rebuild_menu()
 
         # Start long running synchronization thread
         self.start_synchronization_thread()
