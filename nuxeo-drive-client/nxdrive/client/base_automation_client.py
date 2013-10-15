@@ -102,9 +102,12 @@ class BaseAutomationClient(object):
         self.opener = urllib2.build_opener(self.cookie_processor)
 
         self.is_proxy = False
+        log.debug("URL opener handlers: %r", self.opener.handlers)
         for handler in self.opener.handlers:
             if isinstance(handler, ProxyHandler):
+                log.debug("ProxyHandler: %r", handler)
                 if handler.proxies:
+                    log.debug("Handler proxies: %r", handler.proxies)
                     self.is_proxy = True
 
         self.automation_url = server_url + 'site/automation/'
