@@ -96,12 +96,12 @@ public class DefaultFileSystemItemFactory extends AbstractFileSystemItemFactory
             return false;
         }
         // Check proxy
-        if (doc.isProxy()) {
-            log.debug(String.format(
-                    "Document %s is a proxy, it cannot be adapted as a FileSystemItem.",
-                    doc.getId()));
-            return false;
-        }
+//        if (doc.isProxy()) {
+//            log.debug(String.format(
+//                    "Document %s is a proxy, it cannot be adapted as a FileSystemItem.",
+//                    doc.getId()));
+//            return false;
+//        }
         // Check HiddenInNavigation
         if (doc.hasFacet("HiddenInNavigation")) {
             log.debug(String.format(

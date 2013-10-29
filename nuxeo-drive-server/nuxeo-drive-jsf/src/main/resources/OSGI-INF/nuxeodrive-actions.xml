@@ -54,7 +54,7 @@
         <type>Forum</type>
 
         <!-- Section sync is disabled until we implement proper support for proxies sync -->
-        <type>Section</type>
+        <!--  <type>Section</type> -->
       </rule>
       <rule grant="true">
         <condition>#{canSynchronizeCurrentDocument}</condition>
