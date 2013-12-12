@@ -70,9 +70,6 @@ class FileInfo(object):
 class LocalClient(object):
     """Client API implementation for the local file system"""
 
-    # TODO: initialize the prefixes and suffix with a dedicated Nuxeo
-    # Automation operations fetched at controller init time.
-
     def __init__(self, base_folder, digest_func='md5', ignored_prefixes=None,
                  ignored_suffixes=None):
         if ignored_prefixes is not None:

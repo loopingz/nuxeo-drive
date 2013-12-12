@@ -33,6 +33,8 @@ from nxdrive.utils import normalized_path
 from nxdrive.utils import safe_long_path
 from nxdrive.utils import encrypt
 from nxdrive.utils import decrypt
+from nxdrive.client.common import DEFAULT_IGNORED_PREFIXES
+from nxdrive.client.common import DEFAULT_IGNORED_SUFFIXES
 
 
 log = get_logger(__name__)
@@ -144,9 +146,10 @@ class Controller(object):
         self._engine, self._session_maker = init_db(
             self.config_folder, echo=echo, poolclass=poolclass)
 
-        # Thread-local storage for the remote client cache
+        # Thread-local storage for the remote and local client cache
         self._local = local()
         self._client_cache_timestamps = dict()
+        self.ignored_prefixes, self.ignored_suffixes = self._init_ignored()
 
         self._remote_error = None
 
@@ -429,7 +432,9 @@ class Controller(object):
         nxclient = self.remote_doc_client_factory(
             server_url, username, self.device_id, self.version,
             proxies=self.proxies, proxy_exceptions=self.proxy_exceptions,
-            password=password, timeout=self.handshake_timeout)
+            password=password, ignored_prefixes=self.ignored_prefixes,
+            ignored_suffixes=self.ignored_suffixes,
+            timeout=self.handshake_timeout)
         token = nxclient.request_token()
         if token is not None:
             # The server supports token based identification: do not store the
@@ -506,6 +511,8 @@ class Controller(object):
                         proxies=self.proxies,
                         proxy_exceptions=self.proxy_exceptions,
                         token=binding.remote_token,
+                        ignored_prefixes=self.ignored_prefixes,
+                        ignored_suffixes=self.ignored_suffixes,
                         timeout=self.timeout)
                 log.info("Revoking token for '%s' with account '%s'",
                          binding.server_url, binding.remote_user)
@@ -616,14 +623,23 @@ class Controller(object):
                                     session=session)
         return pending[0] if len(pending) > 0 else None
 
-    def _get_client_cache(self):
+    def _get_remote_client_cache(self):
         if not hasattr(self._local, 'remote_clients'):
             self._local.remote_clients = dict()
         return self._local.remote_clients
 
+    def _get_local_client_cache(self):
+        if not hasattr(self._local, 'local_clients'):
+            self._local.local_clients = dict()
+        return self._local.local_clients
+
+    def _init_ignored(self):
+        
+        return DEFAULT_IGNORED_PREFIXES, DEFAULT_IGNORED_SUFFIXES
+
     def get_remote_fs_client(self, server_binding):
         """Return a client for the FileSystem abstraction."""
-        cache = self._get_client_cache()
+        cache = self._get_remote_client_cache()
         sb = server_binding
         cache_key = (sb.server_url, sb.remote_user, self.device_id)
         remote_client_cache = cache.get(cache_key)
@@ -650,6 +666,17 @@ class Controller(object):
         remote_client.make_raise(self._remote_error)
         return remote_client
 
+    def get_local_client(self, server_binding):
+        """Return a local file system client"""
+        cache = self._get_local_client_cache()
+        cache_key = server_binding.local_folder
+        local_client = cache.get(cache_key)
+        if local_client is None:
+            local_client = LocalClient(cache_key,
+                                       ignored_prefixes=self.ignored_prefixes,
+                                       ignored_suffixes=self.ignored_suffixes)
+        return local_client
+
     def get_remote_doc_client(self, server_binding, repository='default',
                               base_folder=None):
         """Return an instance of Nuxeo Document Client"""
@@ -658,7 +685,8 @@ class Controller(object):
             sb.server_url, sb.remote_user, self.device_id, self.version,
             proxies=self.proxies, proxy_exceptions=self.proxy_exceptions,
             password=sb.remote_password, token=sb.remote_token,
-            repository=repository, base_folder=base_folder,
+            repository=repository, ignored_prefixes=self.ignored_prefixes,
+            ignored_suffixes=self.ignored_suffixes, base_folder=base_folder,
             timeout=self.timeout, cookie_jar=self.cookie_jar)
 
     def invalidate_client_cache(self, server_url=None):
