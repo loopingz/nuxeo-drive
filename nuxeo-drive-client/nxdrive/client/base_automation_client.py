@@ -209,6 +209,9 @@ class BaseAutomationClient(object):
         except urllib2.HTTPError as e:
             if e.code == 401 or e.code == 403:
                 raise Unauthorized(self.server_url, self.user_id, e.code)
+            elif e.code == 426:
+                """ The client needs update to connect to this server """
+                raise e
             else:
                 msg = base_error_message + "\nHTTP error %d" % e.code
                 if hasattr(e, 'msg'):

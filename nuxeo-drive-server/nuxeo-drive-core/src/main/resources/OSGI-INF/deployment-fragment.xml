@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<fragment version="1">
+	<extension target="web#FILTER">
+		<filter>
+			<display-name>Nuxeo Drive Version Checker</display-name>
+			<filter-name>NuxeoDriveVersionFilter</filter-name>
+			<filter-class>
+				org.nuxeo.drive.service.impl.VersionFilter
+			</filter-class>
+		</filter>
+		<!-- make it match only for automation -->
+		<filter-mapping>
+			<filter-name>NuxeoDriveVersionFilter</filter-name>
+			<url-pattern>/site/automation/*</url-pattern>
+		</filter-mapping>
+	</extension>
+</fragment>
