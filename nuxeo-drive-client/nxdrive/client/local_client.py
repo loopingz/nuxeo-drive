@@ -4,8 +4,10 @@ import unicodedata
 from datetime import datetime
 import hashlib
 import os
+import sys
 import shutil
 import re
+import subprocess
 
 from nxdrive.logging_config import get_logger
 from nxdrive.client.common import safe_filename
@@ -99,7 +101,7 @@ class LocalClient(object):
                 ref, self.base_folder))
             else:
                 return None
-        folderish = os.path.isdir(os_path)
+        folderish = self._is_folderish(os_path)
         stat_info = os.stat(os_path)
         mtime = datetime.fromtimestamp(stat_info.st_mtime)
         path = u'/' + os_path[len(safe_long_path(self.base_folder)) + 1:]
@@ -261,3 +263,16 @@ class LocalClient(object):
 
         raise ValueError("Failed to de-duplicate '%s' under '%s'" % (
             orig_name, parent))
+
+    def _is_folderish(self, path):
+        folderish = os.path.isdir(path)
+        # Detect OS X package / bundle to treat it as non folderish
+        if folderish and sys.platform == 'darwin':
+            p_args = ['mdls', '-name', 'kMDItemContentTypeTree', path]
+            p = subprocess.Popen(p_args, stdout=subprocess.PIPE)
+            out, _ = p.communicate()
+            if 'com.apple.package' in out:
+                log.debug('%s is an Apple package, treat it as non folderish',
+                    path)
+                return False
+        return folderish
