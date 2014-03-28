@@ -215,7 +215,7 @@ public class TestDefaultFileSystemItemFactory {
         assertEquals(syncRootItemId, fsItem.getParentId());
         assertEquals("Joe.odt", fsItem.getName());
         assertFalse(fsItem.isFolder());
-        assertEquals("Administrator", fsItem.getCreator());
+        assertEquals(SecurityConstants.SYSTEM_USERNAME, fsItem.getCreator());
         Blob fileItemBlob = ((FileItem) fsItem).getBlob();
         assertEquals("Joe.odt", fileItemBlob.getFilename());
         assertEquals("Content of Joe's file.", fileItemBlob.getString());
@@ -230,7 +230,7 @@ public class TestDefaultFileSystemItemFactory {
         assertEquals(syncRootItemId, fsItem.getParentId());
         assertEquals("aNote.txt", fsItem.getName());
         assertFalse(fsItem.isFolder());
-        assertEquals("Administrator", fsItem.getCreator());
+        assertEquals(SecurityConstants.SYSTEM_USERNAME, fsItem.getCreator());
         fileItemBlob = ((FileItem) fsItem).getBlob();
         assertEquals("aNote.txt", fileItemBlob.getFilename());
         assertEquals("Content of Bob's note.", fileItemBlob.getString());
@@ -245,7 +245,7 @@ public class TestDefaultFileSystemItemFactory {
         assertEquals(syncRootItemId, fsItem.getParentId());
         assertEquals("Bonnie's file.odt", fsItem.getName());
         assertFalse(fsItem.isFolder());
-        assertEquals("Administrator", fsItem.getCreator());
+        assertEquals(SecurityConstants.SYSTEM_USERNAME, fsItem.getCreator());
         fileItemBlob = ((FileItem) fsItem).getBlob();
         assertEquals("Bonnie's file.odt", fileItemBlob.getFilename());
         assertEquals("Content of Bonnie's file.", fileItemBlob.getString());
@@ -300,7 +300,7 @@ public class TestDefaultFileSystemItemFactory {
         assertEquals(syncRootItemId, fsItem.getParentId());
         assertEquals("Jack's folder", fsItem.getName());
         assertTrue(fsItem.isFolder());
-        assertEquals("Administrator", fsItem.getCreator());
+        assertEquals(SecurityConstants.SYSTEM_USERNAME, fsItem.getCreator());
         List<FileSystemItem> children = ((FolderItem) fsItem).getChildren();
         assertNotNull(children);
         assertEquals(0, children.size());
@@ -317,7 +317,7 @@ public class TestDefaultFileSystemItemFactory {
         assertEquals(syncRootItemId, fsItem.getParentId());
         assertEquals("Sarah's folderish file", fsItem.getName());
         assertTrue(fsItem.isFolder());
-        assertEquals("Administrator", fsItem.getCreator());
+        assertEquals(SecurityConstants.SYSTEM_USERNAME, fsItem.getCreator());
 
         // ------------------------------------------------------
         // Check not downloadable nor folderish

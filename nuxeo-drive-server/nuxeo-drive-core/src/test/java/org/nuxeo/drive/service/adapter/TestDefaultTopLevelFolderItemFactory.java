@@ -45,6 +45,7 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.impl.DocumentModelImpl;
 import org.nuxeo.ecm.core.api.impl.blob.StringBlob;
+import org.nuxeo.ecm.core.api.security.SecurityConstants;
 import org.nuxeo.ecm.core.test.TransactionalFeature;
 import org.nuxeo.ecm.platform.test.PlatformFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
@@ -205,7 +206,7 @@ public class TestDefaultTopLevelFolderItemFactory {
                 "DefaultTopLevelFolderItemFactory#"));
         assertEquals("syncRoot1", firstRootAsFsItem.getName());
         assertTrue(firstRootAsFsItem.isFolder());
-        assertEquals("Administrator", firstRootAsFsItem.getCreator());
+        assertEquals(SecurityConstants.SYSTEM_USERNAME, firstRootAsFsItem.getCreator());
         assertTrue(firstRootAsFsItem.getCanRename());
         firstRootAsFsItem.rename("newName");
         assertEquals("newName", firstRootAsFsItem.getName());
